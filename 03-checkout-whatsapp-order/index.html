@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Step 03 — Checkout via WhatsApp Order | Build Your Own Store</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, sans-serif; margin: 0; background: #FAF6EF; color: #222; }
+  header { background: #7C2233; color: #fff; padding: 20px; text-align: center; }
+  header h1 { margin: 0 0 4px; font-size: 26px; }
+  header p { margin: 0; opacity: .9; font-size: 14px; }
+  main { max-width: 720px; margin: 0 auto; padding: 20px; }
+  .box { background: #fff; border: 1px solid #e5ddd0; border-radius: 12px; padding: 18px; margin-bottom: 16px; }
+  .box h2 { margin: 0 0 12px; font-size: 19px; }
+  label { display: block; font-size: 14px; font-weight: bold; margin: 12px 0 4px; }
+  input, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; font-family: inherit; }
+  button { padding: 11px 20px; border: none; border-radius: 8px; background: #25D366; color: #fff; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 14px; }
+  button:disabled { background: #ccc; cursor: not-allowed; }
+  .line { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f0e9dd; font-size: 14px; }
+  .total { display: flex; justify-content: space-between; font-weight: bold; font-size: 17px; margin-top: 10px; }
+  pre { background: #f6f1e7; padding: 14px; border-radius: 8px; white-space: pre-wrap; font-size: 14px; }
+  .demo-note { font-size: 12px; color: #888; }
+  .empty { color: #888; font-size: 14px; }
+  footer { text-align: center; padding: 20px; font-size: 13px; color: #888; }
+  footer a { color: #7C2233; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Demo Shop</h1>
+  <p>Step 03 — Checkout via WhatsApp Order &middot; Built by Faisal Digital Hub</p>
+</header>
+<main>
+  <div class="box">
+    <h2>Your Order</h2>
+    <div id="order-lines"></div>
+    <div class="total"><span>Total (demo prices)</span><span id="total">Rs. 0</span></div>
+    <p class="demo-note">This order comes from the cart in Step 02 — same browser, same saved cart. Add items in Step 02 first, then come back here.</p>
+  </div>
+
+  <div class="box">
+    <h2>Delivery Details</h2>
+    <label for="name">Your name</label>
+    <input id="name" type="text" placeholder="e.g. Ahmed Raza">
+    <label for="address">Delivery address</label>
+    <textarea id="address" rows="2" placeholder="House, street, area"></textarea>
+    <label for="city">City</label>
+    <input id="city" type="text" placeholder="e.g. Lahore">
+    <label for="shop-number">Shop WhatsApp number (country code, digits only)</label>
+    <input id="shop-number" type="text" placeholder="e.g. 92XXXXXXXXXX" inputmode="numeric">
+    <p class="demo-note">Enter the shop's own WhatsApp number here. No number is stored in this page — a real shop owner types their own number.</p>
+    <button id="build" disabled>Build WhatsApp Order</button>
+  </div>
+
+  <div class="box" id="preview-box" hidden>
+    <h2>Order message (preview)</h2>
+    <pre id="preview"></pre>
+    <a id="send-link" href="#" target="_blank" rel="noopener"><button type="button">Send Order on WhatsApp</button></a>
+    <p class="demo-note">No backend, no payment, no order is saved anywhere. Clicking the button only opens WhatsApp with this message ready to send. The shop then confirms the order in chat.</p>
+  </div>
+</main>
+<footer><a href="../02-shopping-cart/index.html">&larr; Step 02 — Shopping Cart</a> &middot; <a href="../index.html">All steps</a> &middot; Next: <a href="../04-search-and-sort/index.html">Step 04 — Search and Sort &rarr;</a></footer>
+
+<script>
+const PRODUCTS = [
+  { "id": 1, "name": "Chocolate Cake", "price": 1200 },
+  { "id": 2, "name": "Butter Cookies", "price": 450 },
+  { "id": 3, "name": "Lawn Kurti", "price": 2500 },
+  { "id": 4, "name": "Embroidered Dupatta", "price": 1500 },
+  { "id": 5, "name": "Face Wash", "price": 850 },
+  { "id": 6, "name": "Lipstick", "price": 950 },
+  { "id": 7, "name": "Cupcakes (Pack of 6)", "price": 900 },
+  { "id": 8, "name": "Cotton Shalwar Kameez", "price": 3500 }
+];
+
+function allProducts() {
+  let custom = [];
+  try { custom = JSON.parse(localStorage.getItem("byos-custom-products") || "[]"); } catch (e) {}
+  return PRODUCTS.concat(custom);
+}
+function loadCart() {
+  try { return JSON.parse(localStorage.getItem("byos-cart") || "{}"); }
+  catch (e) { return {}; }
+}
+
+const cart = loadCart();
+const items = allProducts().filter(p => cart[p.id]);
+const box = document.getElementById("order-lines");
+if (items.length === 0) {
+  box.innerHTML = `<p class="empty">Your cart is empty. Go to Step 02, add some products, then come back here.</p>`;
+} else {
+  box.innerHTML = items.map(p => `
+    <div class="line"><span>${p.name} × ${cart[p.id]}</span><b>Rs. ${(p.price * cart[p.id]).toLocaleString()}</b></div>`).join("");
+}
+const total = items.reduce((n, p) => n + p.price * cart[p.id], 0);
+document.getElementById("total").textContent = "Rs. " + total.toLocaleString();
+document.getElementById("build").disabled = items.length === 0;
+
+document.getElementById("build").addEventListener("click", () => {
+  const name = document.getElementById("name").value.trim();
+  const address = document.getElementById("address").value.trim();
+  const city = document.getElementById("city").value.trim();
+  const shopNumber = document.getElementById("shop-number").value.replace(/[^0-9]/g, "");
+  if (!name || !address || !city) { alert("Please fill in your name, address, and city."); return; }
+  if (!shopNumber) { alert("Please enter the shop's WhatsApp number."); return; }
+
+  const lines = items.map(p => `• ${p.name} × ${cart[p.id]} — Rs. ${(p.price * cart[p.id]).toLocaleString()}`);
+  const message =
+    `Hello Demo Shop! I want to place an order:\n\n` +
+    lines.join("\n") +
+    `\n\nTotal: Rs. ${total.toLocaleString()} (demo prices)\n\n` +
+    `Name: ${name}\nAddress: ${address}\nCity: ${city}`;
+
+  document.getElementById("preview").textContent = message;
+  document.getElementById("send-link").href = "https://wa.me/" + shopNumber + "?text=" + encodeURIComponent(message);
+  document.getElementById("preview-box").hidden = false;
+});
+</script>
+</body>
+</html>

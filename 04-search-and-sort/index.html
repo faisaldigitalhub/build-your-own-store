@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Step 04 — Search and Sort | Build Your Own Store</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, sans-serif; margin: 0; background: #FAF6EF; color: #222; }
+  header { background: #7C2233; color: #fff; padding: 20px; text-align: center; }
+  header h1 { margin: 0 0 4px; font-size: 26px; }
+  header p { margin: 0; opacity: .9; font-size: 14px; }
+  main { max-width: 960px; margin: 0 auto; padding: 20px; }
+  .controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
+  .controls input, .controls select { padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; font-family: inherit; }
+  .controls input { flex: 1; min-width: 200px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+  .card { background: #fff; border: 1px solid #e5ddd0; border-radius: 12px; padding: 14px; }
+  .card h3 { margin: 0 0 4px; font-size: 17px; }
+  .card p { margin: 0 0 10px; font-size: 13px; color: #666; }
+  .price { font-weight: bold; color: #7C2233; }
+  .demo-note { font-size: 12px; color: #888; }
+  .count { font-size: 14px; color: #666; margin-bottom: 12px; }
+  footer { text-align: center; padding: 20px; font-size: 13px; color: #888; }
+  footer a { color: #7C2233; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Demo Shop</h1>
+  <p>Step 04 — Search and Sort &middot; Built by Faisal Digital Hub</p>
+</header>
+<main>
+  <div class="controls">
+    <input id="search" type="text" placeholder="Search products… e.g. cake">
+    <select id="sort">
+      <option value="name-asc">Name: A to Z</option>
+      <option value="name-desc">Name: Z to A</option>
+      <option value="price-asc">Price: low to high</option>
+      <option value="price-desc">Price: high to low</option>
+    </select>
+  </div>
+  <p class="count" id="count"></p>
+  <div class="grid" id="grid"></div>
+  <p class="demo-note">All prices are demo prices in PKR, for learning only — not real shop prices.</p>
+</main>
+<footer><a href="../03-checkout-whatsapp-order/index.html">&larr; Step 03 — Checkout</a> &middot; <a href="../index.html">All steps</a> &middot; Next: <a href="../05-admin-add-product/index.html">Step 05 — Admin &rarr;</a></footer>
+
+<script>
+const PRODUCTS = [
+  { "id": 1, "name": "Chocolate Cake", "category": "Bakery", "price": 1200, "description": "Fresh chocolate cake, 1 kg." },
+  { "id": 2, "name": "Butter Cookies", "category": "Bakery", "price": 450, "description": "A box of 12 butter cookies." },
+  { "id": 3, "name": "Lawn Kurti", "category": "Boutique", "price": 2500, "description": "Printed lawn kurti, summer wear." },
+  { "id": 4, "name": "Embroidered Dupatta", "category": "Boutique", "price": 1500, "description": "Chiffon dupatta with light embroidery." },
+  { "id": 5, "name": "Face Wash", "category": "Beauty", "price": 850, "description": "Gentle face wash, 100 ml." },
+  { "id": 6, "name": "Lipstick", "category": "Beauty", "price": 950, "description": "Matte lipstick, long lasting." },
+  { "id": 7, "name": "Cupcakes (Pack of 6)", "category": "Bakery", "price": 900, "description": "Six vanilla cupcakes with frosting." },
+  { "id": 8, "name": "Cotton Shalwar Kameez", "category": "Boutique", "price": 3500, "description": "Stitched cotton 2-piece suit." }
+];
+
+function allProducts() {
+  let custom = [];
+  try { custom = JSON.parse(localStorage.getItem("byos-custom-products") || "[]"); } catch (e) {}
+  return PRODUCTS.concat(custom);
+}
+
+function render() {
+  const query = document.getElementById("search").value.trim().toLowerCase();
+  const sort = document.getElementById("sort").value;
+
+  // 1. Filter: keep products whose name or category contains the search text.
+  let shown = allProducts().filter(p =>
+    p.name.toLowerCase().includes(query) || p.category.toLowerCase().includes(query));
+
+  // 2. Sort: make a copy first, so the original list is never reordered.
+  shown = [...shown];
+  if (sort === "name-asc") shown.sort((a, b) => a.name.localeCompare(b.name));
+  if (sort === "name-desc") shown.sort((a, b) => b.name.localeCompare(a.name));
+  if (sort === "price-asc") shown.sort((a, b) => a.price - b.price);
+  if (sort === "price-desc") shown.sort((a, b) => b.price - a.price);
+
+  document.getElementById("count").textContent =
+    shown.length === 0 ? "No products match your search." : `Showing ${shown.length} of ${allProducts().length} products.`;
+  document.getElementById("grid").innerHTML = shown.map(p => `
+    <div class="card">
+      <h3>${p.name}</h3>
+      <p>${p.description}</p>
+      <div><span class="price">Rs. ${p.price.toLocaleString()}</span> <span class="demo-note">(demo)</span></div>
+      <p class="demo-note">${p.category}</p>
+    </div>`).join("");
+}
+
+document.getElementById("search").addEventListener("input", render);
+document.getElementById("sort").addEventListener("change", render);
+render();
+</script>
+</body>
+</html>

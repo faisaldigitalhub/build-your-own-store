@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Step 01 — Product Catalog | Build Your Own Store</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, sans-serif; margin: 0; background: #FAF6EF; color: #222; }
+  header { background: #7C2233; color: #fff; padding: 20px; text-align: center; }
+  header h1 { margin: 0 0 4px; font-size: 26px; }
+  header p { margin: 0; opacity: .9; font-size: 14px; }
+  main { max-width: 960px; margin: 0 auto; padding: 20px; }
+  .filters { margin: 8px 0 20px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .filters button { padding: 8px 16px; border: 1px solid #7C2233; background: #fff; color: #7C2233; border-radius: 20px; cursor: pointer; font-size: 14px; }
+  .filters button.active { background: #7C2233; color: #fff; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+  .card { background: #fff; border: 1px solid #e5ddd0; border-radius: 12px; overflow: hidden; }
+  .thumb { height: 110px; display: flex; align-items: center; justify-content: center; font-size: 44px; font-weight: bold; color: #fff; }
+  .card-body { padding: 14px; }
+  .card-body h3 { margin: 0 0 4px; font-size: 17px; }
+  .card-body p { margin: 0 0 10px; font-size: 13px; color: #666; }
+  .price { font-weight: bold; color: #7C2233; }
+  .demo-note { font-size: 12px; color: #888; }
+  footer { text-align: center; padding: 20px; font-size: 13px; color: #888; }
+  footer a { color: #7C2233; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Demo Shop</h1>
+  <p>Step 01 — Product Catalog &middot; Built by Faisal Digital Hub</p>
+</header>
+<main>
+  <div class="filters" id="filters"></div>
+  <div class="grid" id="grid"></div>
+  <p class="demo-note">All prices are demo prices in PKR, for learning only — not real shop prices.</p>
+</main>
+<footer><a href="../index.html">&larr; Back to all steps</a> &middot; Next: <a href="../02-shopping-cart/index.html">Step 02 — Shopping Cart &rarr;</a></footer>
+
+<script src="products.js"></script>
+<script>
+// ---- THE DATA lives in products.js (loaded above). The page below is only a template. ----
+// If products.js is missing (someone copied this file alone), fall back to a small built-in list.
+const FALLBACK_PRODUCTS = [
+  { "id": 1, "name": "Chocolate Cake", "category": "Bakery", "price": 1200, "description": "Fresh chocolate cake, 1 kg." },
+  { "id": 2, "name": "Butter Cookies", "category": "Bakery", "price": 450, "description": "A box of 12 butter cookies." }
+];
+
+const COLORS = { "Bakery": "#B7791F", "Boutique": "#7C2233", "Beauty": "#6B4F9E" };
+
+let products = (typeof PRODUCTS !== "undefined" && PRODUCTS.length) ? PRODUCTS.slice() : FALLBACK_PRODUCTS;
+let activeCategory = "All";
+
+function loadProducts() {
+  // Products added in Step 05 (admin page) also show up here.
+  try {
+    const custom = JSON.parse(localStorage.getItem("byos-custom-products") || "[]");
+    products = products.concat(custom);
+  } catch (e) { /* ignore bad stored data */ }
+  renderFilters();
+  renderGrid();
+}
+
+function renderFilters() {
+  const categories = ["All", ...new Set(products.map(p => p.category))];
+  document.getElementById("filters").innerHTML = categories.map(c =>
+    `<button class="${c === activeCategory ? "active" : ""}" data-cat="${c}">${c}</button>`
+  ).join("");
+  document.querySelectorAll("#filters button").forEach(btn =>
+    btn.addEventListener("click", () => { activeCategory = btn.dataset.cat; renderFilters(); renderGrid(); })
+  );
+}
+
+function renderGrid() {
+  const shown = activeCategory === "All" ? products : products.filter(p => p.category === activeCategory);
+  document.getElementById("grid").innerHTML = shown.map(p => `
+    <div class="card">
+      <div class="thumb" style="background:${COLORS[p.category] || "#555"}">${p.name.charAt(0)}</div>
+      <div class="card-body">
+        <h3>${p.name}</h3>
+        <p>${p.description}</p>
+        <span class="price">Rs. ${p.price.toLocaleString()}</span>
+        <span class="demo-note"> (demo price)</span>
+      </div>
+    </div>`).join("");
+}
+
+loadProducts();
+</script>
+</body>
+</html>

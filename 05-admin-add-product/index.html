@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Step 05 — Admin: Add a Product | Build Your Own Store</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, sans-serif; margin: 0; background: #FAF6EF; color: #222; }
+  header { background: #7C2233; color: #fff; padding: 20px; text-align: center; }
+  header h1 { margin: 0 0 4px; font-size: 26px; }
+  header p { margin: 0; opacity: .9; font-size: 14px; }
+  main { max-width: 720px; margin: 0 auto; padding: 20px; }
+  .box { background: #fff; border: 1px solid #e5ddd0; border-radius: 12px; padding: 18px; margin-bottom: 16px; }
+  .box h2 { margin: 0 0 12px; font-size: 19px; }
+  label { display: block; font-size: 14px; font-weight: bold; margin: 12px 0 4px; }
+  input, textarea, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; font-family: inherit; }
+  button { padding: 10px 18px; border: none; border-radius: 8px; background: #7C2233; color: #fff; cursor: pointer; font-size: 15px; margin-top: 14px; }
+  button.small { background: #eee; color: #222; padding: 4px 10px; margin-top: 0; font-size: 13px; }
+  .line { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid #f0e9dd; font-size: 14px; }
+  .demo-note { font-size: 12px; color: #888; }
+  .ok { color: #1a7f37; font-weight: bold; }
+  footer { text-align: center; padding: 20px; font-size: 13px; color: #888; }
+  footer a { color: #7C2233; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Demo Shop — Admin</h1>
+  <p>Step 05 — Add a Product &middot; Built by Faisal Digital Hub</p>
+</header>
+<main>
+  <div class="box">
+    <h2>Add a product</h2>
+    <label for="name">Product name</label>
+    <input id="name" type="text" placeholder="e.g. Mango Jam">
+    <label for="category">Category</label>
+    <select id="category">
+      <option>Bakery</option>
+      <option>Boutique</option>
+      <option>Beauty</option>
+      <option>Other</option>
+    </select>
+    <label for="price">Price (PKR, demo price)</label>
+    <input id="price" type="number" min="1" placeholder="e.g. 600">
+    <label for="description">Description</label>
+    <textarea id="description" rows="2" placeholder="One short line about the product"></textarea>
+    <button id="add">Add Product</button>
+    <p id="msg" class="ok"></p>
+  </div>
+
+  <div class="box">
+    <h2>Products you added (<span id="count">0</span>)</h2>
+    <div id="list"></div>
+    <p class="demo-note">These products are saved in your browser only (localStorage, key <b>byos-custom-products</b>). They appear in Steps 01, 02, and 04 as well — open any of those pages and look for your product. A real shop would save products on a server so every visitor sees them; here the point is to learn how adding a product works.</p>
+  </div>
+</main>
+<footer><a href="../04-search-and-sort/index.html">&larr; Step 04 — Search and Sort</a> &middot; <a href="../index.html">All steps</a> &middot; <a href="../01-product-catalog/index.html">See your products in the catalog &rarr;</a></footer>
+
+<script>
+const CUSTOM_KEY = "byos-custom-products";
+
+function loadCustom() {
+  try { return JSON.parse(localStorage.getItem(CUSTOM_KEY) || "[]"); }
+  catch (e) { return []; }
+}
+function saveCustom(list) { localStorage.setItem(CUSTOM_KEY, JSON.stringify(list)); }
+
+function render() {
+  const list = loadCustom();
+  document.getElementById("count").textContent = list.length;
+  document.getElementById("list").innerHTML = list.length === 0
+    ? `<p class="demo-note">No products added yet. Use the form above.</p>`
+    : list.map(p => `
+      <div class="line">
+        <span><b>${p.name}</b> — ${p.category}<br><span class="demo-note">${p.description}</span></span>
+        <span>Rs. ${p.price.toLocaleString()} <button class="small" data-del="${p.id}">Delete</button></span>
+      </div>`).join("");
+  document.querySelectorAll("[data-del]").forEach(b =>
+    b.addEventListener("click", () => {
+      saveCustom(loadCustom().filter(p => p.id !== Number(b.dataset.del)));
+      render();
+    }));
+}
+
+document.getElementById("add").addEventListener("click", () => {
+  const name = document.getElementById("name").value.trim();
+  const category = document.getElementById("category").value;
+  const price = Number(document.getElementById("price").value);
+  const description = document.getElementById("description").value.trim() || "Added from the admin page.";
+  if (!name) { alert("Please enter a product name."); return; }
+  if (!price || price <= 0) { alert("Please enter a valid price."); return; }
+
+  const list = loadCustom();
+  list.push({ id: Date.now(), name, category, price, description });
+  saveCustom(list);
+  document.getElementById("msg").textContent = `"${name}" added. Open Step 01 to see it in the shop.`;
+  document.getElementById("name").value = "";
+  document.getElementById("price").value = "";
+  document.getElementById("description").value = "";
+  render();
+});
+
+render();
+</script>
+</body>
+</html>
